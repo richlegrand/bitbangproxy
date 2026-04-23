@@ -1,7 +1,7 @@
-# Binary
-bitbangproxy
-bitbangproxy.exe
-bitbangproxy-macos
+# Binary (root level only, not cmd/bitbangproxy/ source dir)
+/bitbangproxy
+/bitbangproxy.exe
+/bitbangproxy-macos
 
 # Identity files
 .bitbang/
