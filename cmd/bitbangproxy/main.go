@@ -22,7 +22,7 @@ import (
 	"github.com/richlegrand/bitbang/bitbangproxy/internal/signaling"
 )
 
-const version = "0.1.0"
+const version = "0.1.1"
 
 const banner = `   ___  _ __  ___                 ___
   / _ )(_) /_/ _ )___ ____  ___ _/ _ \_______ __ ____ __
