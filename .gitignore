@@ -1,0 +1,11 @@
+# Binary
+bitbangproxy
+bitbangproxy.exe
+bitbangproxy-macos
+
+# Identity files
+.bitbang/
+
+# Python test cache
+__pycache__/
+tests/e2e/screenshots/
