@@ -22,6 +22,7 @@ import (
 type Handler struct {
 	Target      string     // e.g. "localhost:8080" (from --target flag)
 	UID         string     // device UID for landing page redirect
+	Server      string     // signaling server hostname (e.g. "bitba.ng")
 	PIN         *auth.PINAuth // PIN authentication (nil = no auth)
 	Verbose     bool
 	DC          *webrtc.DataChannel
@@ -306,7 +307,11 @@ func (h *Handler) proxyRequest(streamID uint32, req protocol.Request, body io.Re
 		httpReq.ContentLength = reqLen
 	}
 	// Set Host, Referer, and Origin to match the target, not bitba.ng.
+	// Forward the original host so reverse-proxy-aware apps (e.g. OctoPrint)
+	// generate URLs and cookies matching the external hostname.
 	httpReq.Host = target
+	httpReq.Header.Set("X-Forwarded-Host", h.Server)
+	httpReq.Header.Set("X-Forwarded-Proto", "https")
 	httpReq.Header.Set("Referer", fmt.Sprintf("http://%s/", target))
 
 	// Only follow redirects that change the target host (e.g. nas.local ->
@@ -423,7 +428,6 @@ const landingPageHTML = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BitBangProxy</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -452,6 +456,7 @@ const landingPageHTML = `<!DOCTYPE html>
 <body>
     <input type="text" id="target" placeholder="hostname:port" autofocus
            onkeydown="if(event.key==='Enter')go()">
+    <button onclick="go()" style="padding:6px 12px;font-size:14px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;margin-left:4px;">Go</button>
     <div class="hint">e.g. localhost:8080, nas.local, 192.168.1.10</div>
     <script>
         function go() {

@@ -3,6 +3,7 @@ package proxy
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 	"net/url"
 
 	"github.com/gorilla/websocket"
@@ -21,21 +22,26 @@ func (h *Handler) handleWSOpen(frame protocol.Frame) {
 	var msg struct {
 		Type     string `json:"type"`
 		Pathname string `json:"pathname"`
+		Cookies  string `json:"cookies"`
 	}
 	if err := json.Unmarshal(frame.Payload, &msg); err != nil {
 		log.Printf("Failed to parse WS open: %v", err)
 		return
 	}
 
-	go h.bridgeWebSocket(frame.StreamID, msg.Pathname)
+	go h.bridgeWebSocket(frame.StreamID, msg.Pathname, msg.Cookies)
 }
 
-func (h *Handler) bridgeWebSocket(streamID uint32, pathname string) {
+func (h *Handler) bridgeWebSocket(streamID uint32, pathname string, cookies string) {
 	// Resolve target and path (same logic as HTTP)
 	target, wsPath := h.resolveTarget(pathname)
-	// Connect to local WebSocket server
+	// Connect to local WebSocket server with cookies for session auth
 	u := url.URL{Scheme: "ws", Host: target, Path: wsPath}
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	header := http.Header{}
+	if cookies != "" {
+		header.Set("Cookie", cookies)
+	}
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), header)
 	if err != nil {
 		log.Printf("WS connect failed: %s -> %v", pathname, err)
 		// Send FIN to close the browser-side WebSocket

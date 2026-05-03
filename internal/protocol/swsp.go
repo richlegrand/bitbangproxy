@@ -26,7 +26,7 @@ const (
 
 	// ProtocolVersion is sent in the register message. The signaling server
 	// rejects devices below its minimum. Bump only for breaking wire changes.
-	ProtocolVersion = 1
+	ProtocolVersion = 2
 )
 
 // Frame represents a single SWSP frame.

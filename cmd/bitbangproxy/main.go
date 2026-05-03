@@ -22,7 +22,7 @@ import (
 	"github.com/richlegrand/bitbang/bitbangproxy/internal/signaling"
 )
 
-const version = "0.1.1"
+const version = "0.1.2"
 
 const banner = `   ___  _ __  ___                 ___
   / _ )(_) /_/ _ )___ ____  ___ _/ _ \_______ __ ____ __
@@ -114,6 +114,7 @@ func main() {
 			handler = &proxy.Handler{
 				Target:  *target,
 				UID:     id.UID,
+				Server:  *server,
 				PIN:     pinAuth,
 				Verbose: *verbose,
 				DC:      conn.DC,

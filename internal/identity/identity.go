@@ -20,6 +20,19 @@ import (
 	"path/filepath"
 )
 
+// AuthDomain is the domain separation tag prepended to challenge nonces before
+// signing. Must match the signaling server's AUTH_DOMAIN.
+//
+// Prevents cross-protocol attacks: without this prefix, a malicious server
+// could send nonce = SHA256(arbitrary_payload) and reuse the device's
+// signature in another context (e.g. firmware verification) that uses the
+// same RSA key. Binding every signature to its purpose makes a signature
+// from one context structurally invalid in any other.
+//
+// Bumped only if the signing scheme itself changes (padding/hash/structure),
+// not when the surrounding protocol version changes.
+var AuthDomain = []byte("bitbang-auth-v1:")
+
 // Identity holds an RSA key pair and the derived UID.
 type Identity struct {
 	PrivateKey *rsa.PrivateKey
@@ -64,10 +77,15 @@ func Load(programName string, ephemeral bool) (*Identity, error) {
 	return id, nil
 }
 
-// Sign signs a challenge nonce using RSASSA-PKCS1-v1_5 with SHA-256.
+// Sign signs a domain-separated challenge nonce using RSASSA-PKCS1-v1_5 with
+// SHA-256. The domain tag prevents the auth signature from being interchangeable
+// with signatures produced for any other purpose.
 func (id *Identity) Sign(nonce []byte) ([]byte, error) {
-	hash := sha256.Sum256(nonce)
-	return rsa.SignPKCS1v15(rand.Reader, id.PrivateKey, crypto.SHA256, hash[:])
+	h := sha256.New()
+	h.Write(AuthDomain)
+	h.Write(nonce)
+	hash := h.Sum(nil)
+	return rsa.SignPKCS1v15(rand.Reader, id.PrivateKey, crypto.SHA256, hash)
 }
 
 func generate() (*Identity, error) {
